@@ -35,11 +35,29 @@ function init() {
   ctx.fillStyle = "rgba(0,0,0,1)";
   ctx.fillRect(0, 0, width, height);
 
+  var fullText = "С днем святого Валюши, Лиза!";
+  var currentText = "";
+  var textIndex = 0;
+  var textPulse = false;
+  var pulseScale = 1;
+  var pulseDirection = 1;
+
   function drawText() {
-    ctx.font = "60px Arial";
+    ctx.save();
+    ctx.font = `${60 * pulseScale}px Arial`;
     ctx.fillStyle = "lightblue";
     ctx.textAlign = "center";
-    ctx.fillText("С днем святого Валюши, Лиза!", width / 2, height / 2.2 + 400);
+    ctx.fillText(currentText, width / 2, height / 2.2 + 400);
+    ctx.restore();
+  }
+
+  function typeWriterEffect() {
+    if (textIndex < fullText.length) {
+      currentText += fullText.charAt(textIndex);
+      textIndex++;
+    } else {
+      textPulse = true;
+    }
   }
 
   function heartPosition(rad) {
@@ -106,6 +124,7 @@ function init() {
 
   var config = { traceK: 0.4, timeDelta: 0.6 };
   var time = 0;
+  var textTimer = 0;
 
   function loop() {
     var n = -Math.cos(time);
@@ -150,37 +169,21 @@ function init() {
       u.trace.forEach((t) => ctx.fillRect(t.x, t.y, 1, 1));
     }
 
+    if (textTimer % 10 === 0) typeWriterEffect();
+
+    if (textPulse) {
+      pulseScale += 0.0005 * pulseDirection;
+      if (pulseScale > 1.05 || pulseScale < 0.95) pulseDirection *= -1;
+    }
+
     drawText();
+    textTimer++;
     window.requestAnimationFrame(loop, canvas);
   }
 
   loop();
 }
 
-function continueMusic() {
-  const music = document.getElementById("backgroundMusic");
-
-  const isMusicPlaying = localStorage.getItem("musicPlaying") === "true";
-  const musicCurrentTime = localStorage.getItem("musicCurrentTime") || 0;
-
-  if (music) {
-    if (isMusicPlaying) {
-      music.currentTime = parseFloat(musicCurrentTime);
-      music.play().catch((error) =>
-        console.log("Music playback failed", error)
-      );
-    }
-  }
-
-  document.addEventListener("click", function startMusic() {
-    if (music && !isMusicPlaying) {
-      music.play().catch((error) => console.log("Autoplay prevented", error));
-      document.removeEventListener("click", startMusic);
-    }
-  });
-}
-
 document.addEventListener("DOMContentLoaded", function () {
   init();
-  continueMusic();
 });
